@@ -1,0 +1,103 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+
+[System.Serializable]
+public class scr_BulletManager : MonoBehaviour
+{
+    public Queue<GameObject> enemyBulletPool;
+    public Queue<GameObject> playerBulletPool;
+    public int enemyBulletNumber;
+    public int playerBulletNumber;
+
+    private scr_BulletFactory factory;
+
+    // Start is called before the first frame update
+    void Start()
+    {
+        enemyBulletPool = new Queue<GameObject>(); // creates an empty Enemy Bullet Queue
+        playerBulletPool = new Queue<GameObject>(); // creates an empty Player Bullet Queue
+
+        factory = GetComponent<scr_BulletFactory>(); // gets a reference to the Bullet Factory code
+
+        //BuildBulletPool();
+    }
+
+    private void AddBullet(scr_BulletType type = scr_BulletType.ENEMY)
+    {
+        var temp_bullet = factory.createBullet(type);
+
+        switch (type)
+        {
+            case scr_BulletType.ENEMY:
+                enemyBulletPool.Enqueue(temp_bullet);
+                enemyBulletNumber++;
+                break;
+            case scr_BulletType.PLAYER:
+                playerBulletPool.Enqueue(temp_bullet);
+                playerBulletNumber++;
+                break;
+        }
+    }
+
+    /// <summary>
+    /// This method removes a bullet prefab from the bullet pool
+    /// and returns a reference to it.
+    /// </summary>
+    /// <param name="spawnPosition"></param>
+    /// <returns></returns>
+    public GameObject GetBullet(Vector2 spawnPosition, scr_BulletType type = scr_BulletType.ENEMY)
+    {
+        GameObject temp_bullet = null;
+
+        switch (type)
+        {
+            case scr_BulletType.ENEMY:
+                if (enemyBulletPool.Count < 1)
+                {
+                    AddBullet();
+                }
+
+                temp_bullet = enemyBulletPool.Dequeue();
+                temp_bullet.transform.position = spawnPosition;
+                temp_bullet.SetActive(true);
+
+                break;
+            case scr_BulletType.PLAYER:
+
+                if (playerBulletPool.Count < 1)
+                {
+                    AddBullet(scr_BulletType.PLAYER);
+                }
+                
+                temp_bullet = playerBulletPool.Dequeue();
+                temp_bullet.transform.position = spawnPosition;
+                temp_bullet.SetActive(true);
+                
+                break;
+        }
+
+        return temp_bullet;
+
+    }
+
+    /// <summary>
+    /// This method returns a bullet back into the bullet pool
+    /// </summary>
+    /// <param name="returnedBullet"></param>
+    public void ReturnBullet(GameObject returnedBullet, scr_BulletType type = scr_BulletType.ENEMY)
+    {
+        returnedBullet.SetActive(false);
+
+        switch (type)
+        {
+            case scr_BulletType.ENEMY:
+                enemyBulletPool.Enqueue(returnedBullet);
+                break;
+            case scr_BulletType.PLAYER:
+                playerBulletPool.Enqueue(returnedBullet);
+                break;
+        }
+    }
+}
